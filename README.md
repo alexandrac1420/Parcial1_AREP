@@ -52,3 +52,8 @@
 1. Accede a la interfaz web en tu navegador a través de [http://localhost:35000/](http://localhost:35000/).
 2. Ingresa una operación en el formato `comando(param1,param2)`, como `pow(2,3)` o `pi()`.
 3. Presiona el botón "Calcular" y verás el resultado en pantalla.
+![image](https://github.com/user-attachments/assets/d6e35e2b-c31d-4255-814e-8679741e6ce2)
+![image](https://github.com/user-attachments/assets/10118a98-0f55-40fd-ae6e-11282ff6f9d1)
+![image](https://github.com/user-attachments/assets/b5721e1b-79dd-44b9-bf02-d55463114354)
+
+
