@@ -22,6 +22,7 @@ public class ReflexCalculator {
             String inputLine;
             String command = null;
             while ((inputLine = in.readLine()) != null) {
+                System.out.println("Recibi: " + inputLine);
                 if (inputLine.startsWith("GET /compreflex?comando=")) {
                     command = inputLine.split("=")[1].split(" ")[0];
                     break;
