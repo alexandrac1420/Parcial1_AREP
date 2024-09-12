@@ -5,67 +5,72 @@ import java.io.*;
 
 public class HttpServerFachada {
    public static void main(String[] args) throws IOException {
-      ServerSocket serverSocket = null;
-      try {
-         serverSocket = new ServerSocket(35000);
-      } catch (IOException e) {
-         System.err.println("Could not listen on port: 35000.");
-         System.exit(1);
-      }
-      Socket clientSocket = null;
+      ServerSocket serverSocket = new ServerSocket(35000);
+      System.out.println("Escuchando por el puerto 35000");
 
-      try {
-         System.out.println("Listo para recibir ...");
-         clientSocket = serverSocket.accept();
-      } catch (IOException e) {
-         System.err.println("Accept failed.");
-         System.exit(1);
-      }
-      PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-      BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      String inputLine, outputLine;
-      while ((inputLine = in.readLine()) != null) {
-         System.out.println("Recibí: " + inputLine);
-         if (!in.ready()) {
-            break;
-         }
-      }
-      outputLine = "HTTP/1.1 200 OK\r\n"
-            + "Content-Type: text/html\r\n"
-            + "\r\n"
-            + "<!DOCTYPE html>\n"
+        while (true) {
+            Socket clientSocket = serverSocket.accept();
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            String inputLine;
+            String command = null;
+            while ((inputLine = in.readLine()) != null) {
+                if (inputLine.startsWith("GET /computar?comando=")) {
+                    command = inputLine.split("=")[1].split(" ")[0];
+                    break;
+                }
+                if (!in.ready()) {
+                    break;
+                }
+            }
+
+            if (command != null) {
+                URL reflexCalculatorUrl = new URL("http://localhost:36000/compreflex?comando=" + command);
+                HttpURLConnection conn = (HttpURLConnection) reflexCalculatorUrl.openConnection();
+                conn.setRequestMethod("GET");
+                BufferedReader calcIn = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String response = calcIn.readLine();
+                calcIn.close();
+
+                out.println("HTTP/1.1 200 OK\r\n" + "Content-Type: application/json\r\n" + "\r\n" + response);
+            } else {
+                String clientHtml = getClientHtml();
+                out.println("HTTP/1.1 200 OK\r\n" + "Content-Type: text/html\r\n" + "\r\n" + clientHtml);
+            }
+
+            out.close();
+            in.close();
+            clientSocket.close();
+        }
+    }
+
+    public static String getClientHtml() {
+        return "<!DOCTYPE html>\n"
             + "<html>\n"
             + "<head>\n"
             + "<meta charset=\"UTF-8\">\n"
-            + "<title>calculadora</title>\n"
+            + "<title>Calculadora Reflexiva</title>\n"
             + "</head>\n"
             + "<body>\n"
-            + "<h1>calculadora</h1>\n"
-            + "<form action=\"/calculadora\">\n"
-            + "<label for=\"name\">Name:</label><br>\n"
-            + "<input type=\"text\" id=\"comando\" name=\"comando\" value=\"pow\"><br><br>\n"
-            + "<input type=\"button\" value=\"Submit\" onclick=\"loadGetMsg()\">\n"
+            + "<h1>Calculadora Reflexiva</h1>\n"
+            + "<form>\n"
+            + "<label for=\"comando\">Comando con parametros:</label><br>\n"
+            + "<input type=\"text\" id=\"comando\" name=\"comando\" placeholder=\"pow(2,3)\"><br><br>\n"
+            + "<input type=\"button\" value=\"Calcular\" onclick=\"loadGetMsg()\">\n"
             + "</form>\n"
             + "<div id=\"getrespmsg\"></div>\n"
             + "<script>\n"
             + "function loadGetMsg() {\n"
-            + "let nameVar = document.getElementById(\"comando\").value;\n"
+            + "let comando = document.getElementById(\"comando\").value;\n"
             + "const xhttp = new XMLHttpRequest();\n"
             + "xhttp.onload = function() {\n"
-            + "document.getElementById(\"getrespmsg\").innerHTML =\n"
-            + "this.responseText;\n"
+            + "document.getElementById(\"getrespmsg\").innerHTML = this.responseText;\n"
             + "}\n"
-            + "xhttp.open(\"GET\", \"/computar?comando=\"+nameVar);\n"
+            + "xhttp.open(\"GET\", \"/computar?comando=\" + comando);\n"
             + "xhttp.send();\n"
+            + "}\n"
             + "</script>\n"
             + "</body>\n"
-            + "</html>\n";
-      out.println(outputLine);
-      out.close();
-      in.close();
-      clientSocket.close();
-      serverSocket.close();
-   }
-
-
+            + "</html>";
+    }
 }
